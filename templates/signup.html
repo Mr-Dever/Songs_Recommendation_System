@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- external css -->
+    <link rel="stylesheet" type="text/css" href="static/style.css">
+    <link rel="stylesheet" type="text/css" href="static/signup.css">
+    <!-- bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+
+    <title>SignUp</title>
+</head>
+<body>
+  <div class="login-page">
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+      {{error}}
+    </div>
+    {% endif %}
+    <div id="signupform" class="form">
+      <p style="font-size:50px;font-family: 'Times New Roman', Times, serif;" class="text-align-center font-weight-bold mx-auto text-dark ">Sign Up</p>
+      <form class="register-form" method="POST" action="/register">
+        <input type="text"  id="username" name="username" placeholder="Username"/>
+        {%if user_error  %}
+        <div class="alert alert-danger" id="username_error" class="">
+          <p style = "font-size:14px;" class="py-1">{{user_error}}</p>
+        </div>
+        {%endif%}
+        <input type="password"  id="password" name="password" placeholder="Password"/>
+        {%if password_error %}
+        <div class="alert alert-danger" id="password_error" >
+          <p style = "font-size:14px;" class="py-1">{{password_error}}</p>
+        </div>
+        {%endif%}
+        <input type="email" id="email_address"  name="email_address" placeholder="Email Address"/>
+        {%if email_error %}
+        <div class="alert alert-danger" id="email_address_error" >
+          <p style = "font-size:14px;" class="py-1">{{email_error}}</p>
+        </div>
+        {%endif%}
+        <button class="btn btn-primary" onclick="validateform()">create</button>
+        <p class="message">Already registered? <a href="/login_page">Sign In</a></p>
+      </form>
+    </div>
+  </div>
+
+
+    <script src="static/main.js"></script>
+    <!-- include bootatrap js and jquery -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF" crossorigin="anonymous"></script>
+
+</body>
+</html>

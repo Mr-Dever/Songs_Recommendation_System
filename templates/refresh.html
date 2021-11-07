@@ -1,0 +1,27 @@
+{% extends 'home.html' %}
+{% block songs_display %}
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col"></th>
+            <th scope="col"></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for i in range(0,10) %}
+          <form action="/favourite" method="post">
+            <tr>
+              <th scope="row"></th>
+              <td class="font-weight-bold">{{i}}</td>
+              <td><input type="text" name="song" value="{{song_refresh[i]}}" readonly class="btn bg-white border-0 w-100"></td>
+              <td><input type="text" name="songlink" value="{{songlink_refresh[i]}}" readonly hidden class="bg-white "></td>
+              <td><a href="{{songlink_refresh[i]}}" target="_blank" class="text-decoration-none btn btn-outline-danger">Play
+                  Song</a></td>
+              <td><button type="submit" class="text-decoration-none btn btn-outline-primary">Favourite</button></td>
+            </tr>
+          </form>
+          {% endfor %}
+
+    </tbody>
+</table>
+{% endblock %}
