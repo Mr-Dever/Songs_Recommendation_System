@@ -54,16 +54,19 @@
           </tr>
         </thead>
         <tbody>
-          
+
           {% if favourite %}
-          {% for fav_songs_name , fav_songs_link  in favourite %}
+          {% for fav_song_name , fav_song_link  in favourite %}
           <form action="/delete_fav" method="post">
             <tr>
               <th scope="row"></th>
               <td class="font-weight-bold"></td>
-              <td><input type="text" name="song" value="{{fav_songs_name}}" class="btn bg-white border-0 w-100"></td>
-              <td><input type="text" name="songlink" value="{{fav_songs_link}}" readonly hidden class="bg-white "></td>
-              <td><a href="{{fav_songs_link}}" target="_blank" class="text-decoration-none btn btn-outline-danger">Play
+              <td><input type="text" name="song" value="{{fav_song_name}}" readonly
+                  class="btn bg-white border-0 w-100"></td>
+              <td><input type="text" name="songlink" value="{{fav_song_link}}" readonly hidden class="bg-white ">
+              </td>
+              <td><a href="{{fav_song_link}}" target="_blank"
+                  class="text-decoration-none btn btn-outline-danger">Play
                   Song</a></td>
               <td><button type="submit" class="text-decoration-none btn btn-dark">Delete</button></td>
             </tr>

@@ -64,7 +64,7 @@
       <div class="alert alert-success" id="Favpurite_success" class="">
         <p style="font-size:14px;" class="py-1">{{Favourite_exists}}</p>
       </div>
-      
+
       {% endif %}
 
       {% block songs_display %}
@@ -77,6 +77,18 @@
             <th scope="col"></th>
             <th scope="col"></th>
           </tr>
+          {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+          {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            <span>{{ message }}</span>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          {% endfor %}
+          {% endif %}
+          {% endwith %}
         </thead>
         <tbody>
           {% if song or songlink %}
@@ -85,7 +97,7 @@
             <tr>
               <th scope="row"></th>
               <td class="font-weight-bold">{{i}}</td>
-              <td><input type="text" name="song" value="{{song[i]}}"readonly class="btn bg-white border-0 w-100"></td>
+              <td><input type="text" name="song" value="{{song[i]}}" readonly class="btn bg-white border-0 w-100"></td>
               <td><input type="text" name="songlink" value="{{songlink[i]}}" readonly hidden class="bg-white "></td>
               <td><a href="{{songlink[i]}}" target="_blank" class="text-decoration-none btn btn-outline-danger">Play
                   Song</a></td>

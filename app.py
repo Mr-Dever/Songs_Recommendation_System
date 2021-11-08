@@ -1,4 +1,5 @@
-from flask import Flask, render_template, redirect, request, session ,url_for
+import re
+from flask import Flask, render_template, redirect, request, session ,url_for , flash
 from flask_session import Session
 import pyrebase 
 import pickle
@@ -9,8 +10,6 @@ from firebase_admin import auth
 import firebase_admin
 from firebase_admin import credentials
 import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 cred = credentials.Certificate("Account_key.json")
 firebase_admin.initialize_app(cred)
@@ -132,8 +131,8 @@ def Reset_now():
       else:
         try:
           email2 = auth.generate_password_reset_link(email)
-          my_email = "mirfaizanali78@gmail.com"
-          password = "kzevngbifznrpxlh"
+          my_email = "bengjun6315@gmail.com"
+          password = "vjzpgrjqbgxofuen"
 
           connection = smtplib.SMTP("smtp.gmail.com" , 587)
           connection.ehlo()
@@ -247,40 +246,46 @@ def seperate_song_link_recommendation(songlink,song,recommendation):
 @app.route("/favourite_page")
 def Favourite_page():
   user = auth.get_user_by_email(session['email'])
-  favsongs = db.child("users").child(user.uid).child('Fav-Songs').get().val()
-  fav_songs = set()
-  if favsongs is not None:
-    favsong = db.child("users").child(user.uid).child('Fav-Songs').get()
-    for song in favsong.each():
-        songlist = song.val()
-        fav_songs.add(songlist)
-  fav_songs_name = []
-  fav_songs_link = []
-  for i in fav_songs:
-    if "https" not in i:
-      fav_songs_name.append(i)
-    else:
-      fav_songs_link.append(i)
-  if len(fav_songs_name) == 0 :
+  fav_song = db.child("users").child(user.uid).child('Fav-Songs').get()
+  fav_song_name = []
+  fav_song_link = []
+  if fav_song.val():
+    for del_song in reversed(fav_song.each()):
+        if "https" not in del_song.val():
+            fav_song_name.append(del_song.val())
+        else:
+            fav_song_link.append(del_song.val())
+    print(fav_song_name)
+    print(fav_song_link)
+    return render_template("favourite.html" ,favourite = zip(fav_song_name , fav_song_link))
+  else:
     warning_fav = "No Songs To Display in Favourite List"
     return render_template("favourite.html",warning_fav = warning_fav)
-  favourite = zip( fav_songs_name , fav_songs_link  )
-  print(fav_songs_link)
-  print(fav_songs_name)
-  return render_template("favourite.html" , favourite = favourite )
 
 @app.route("/favourite" , methods = ['GET','POST'])
 def Favourite():
     if request.method == 'POST' and len(dict(request.form)) > 0:
-      userdata = dict(request.form)
-      songss = userdata["song"]
-      songlink = userdata["songlink"]
-      user = auth.get_user_by_email(session['email'])
-      songs =db.child("users").child(user.uid).child('Fav-Songs').push(songss)
-      songlinks =db.child("users").child(user.uid).child('Fav-Songs').push(songlink)
-      return redirect(url_for("recommend"))
+        userdata = dict(request.form)
+        songss = userdata["song"]
+        songlink = userdata["songlink"]
+        user = auth.get_user_by_email(session['email'])
+        fav_song = db.child("users").child(user.uid).child('Fav-Songs').get()
+        print("Fav Value before if ",fav_song.val())
+        if fav_song.val() :
+          for favourite_song in fav_song.each():
+              print("Fav Value in for loop " ,favourite_song.val())
+              if favourite_song.val() == songss:
+                flash(u"Song Already Exist in Your Favourite List" , "warning")
+                return redirect(url_for("recommend"))
+          db.child("users").child(user.uid).child("Fav-Songs").push(songss)
+          db.child("users").child(user.uid).child("Fav-Songs").push(songlink)
+        elif not fav_song.val():
+          db.child("users").child(user.uid).child("Fav-Songs").push(songss)
+          db.child("users").child(user.uid).child("Fav-Songs").push(songlink)
+          return redirect(url_for("recommend"))
     else:
-      return redirect(url_for('recommend'))
+      return redirect(url_for('recommend')) 
+    return redirect(url_for('recommend'))
 # //////////////////////////////////////
 # Favourite Songs Function end Here
 # //////////////////////////////////////
@@ -307,6 +312,7 @@ def Delete():
   return redirect(url_for("Favourite_page"))
 # //////////////////////////////////////
 # Delete Favourite Songs Function end Here
+
 # //////////////////////////////////////
 # //////////////////////////////////////
 # Main Function Goes Here
