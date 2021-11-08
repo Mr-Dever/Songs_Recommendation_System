@@ -30,8 +30,11 @@
             <li class="nav-item pr-5">
               <a class="nav-link" href="/favourite_page">Favourite</a>
             </li>
-            <li class="nav-item px-5">
+            <li class="nav-item pl-5">
               <a class="btn btn-info" href="/logout">Log Out</a>
+            </li>
+            <li class="nav-item pl-1">
+              <a class="btn btn-info" href="/pass_reset">Reset Password</a>
             </li>
           </ul>
         </div>
@@ -51,17 +54,27 @@
           </tr>
         </thead>
         <tbody>
-
-          {% for fav_songs_name , fav_songs_link in favourite %}
+          
+          {% if favourite %}
+          {% for fav_songs_name , fav_songs_link  in favourite %}
+          <form action="/delete_fav" method="post">
             <tr>
               <th scope="row"></th>
               <td class="font-weight-bold"></td>
-              <td><input style="cursor:default; outline:none" type="text" name="song" value="{{fav_songs_name}}"  readonly class=" btn bg-white text-dark border-0 w-100"></td>
+              <td><input type="text" name="song" value="{{fav_songs_name}}" class="btn bg-white border-0 w-100"></td>
+              <td><input type="text" name="songlink" value="{{fav_songs_link}}" readonly hidden class="bg-white "></td>
               <td><a href="{{fav_songs_link}}" target="_blank" class="text-decoration-none btn btn-outline-danger">Play
                   Song</a></td>
-              <!-- <td><a href="/delete_fav" class="text-decoration-none btn btn-dark">Delete</a></td> -->
+              <td><button type="submit" class="text-decoration-none btn btn-dark">Delete</button></td>
             </tr>
+          </form>
           {% endfor %}
+          {% elif warning_fav %}
+          <div class="alert alert-warning" class="">
+            <p style="font-size: 25px; text-align:center;" class="mb-0 py-1">{{warning_fav}}</p>
+          </div>
+          {% endif %}
+
         </tbody>
       </table>
     </div>

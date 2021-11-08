@@ -8,6 +8,9 @@ import random
 from firebase_admin import auth 
 import firebase_admin
 from firebase_admin import credentials
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 cred = credentials.Certificate("Account_key.json")
 firebase_admin.initialize_app(cred)
@@ -64,14 +67,20 @@ def register():
         email_error = "Invalid Email"
         return render_template("signup.html", email_error = email_error)
       else:
-        user = Authe.create_user_with_email_and_password(session['email'] , session['password'])
-        new_user = auth.get_user_by_email(session['email'])
-        username_get = db.child(new_user.uid).child("username").push(session['username'])
-        email_get = db.child(new_user.uid).child("Email").push(session['email'])
-        id = db.child(new_user.uid).child("ID").push(new_user.uid)
-        return redirect(url_for('recommend'))
+        try:
+            user = Authe.create_user_with_email_and_password(session['email'] , session['password'])
+            new_user = auth.get_user_by_email(session['email'])
+            username_get = db.child('users').child(new_user.uid).push(session['username'])
+            email_get = db.child('users').child(new_user.uid).push(session['email'])
+            id = db.child('users').child(new_user.uid).push(new_user.uid)
+            return redirect(url_for('recommend'))
+        except Exception as e:
+            message = "Email Already Exist"
+            return render_template("signup.html",message = message)
+
+            
     else:
-      return "sorry Something went wrong try again"
+      return redirect(url_for("Signup_page"))
 # //////////////////////////////////////
 # Login Function
 # //////////////////////////////////////
@@ -88,11 +97,12 @@ def Login():
           email_error = "Invalid Email!"
           return render_template("login.html", email_error = email_error)
         elif len(session['password']) >= 6:
-          user = Authe.sign_in_with_email_and_password(session['email'] , session['password'])
-          return redirect(url_for('recommend'))
-        else:
-          password_error = "Wrong Password"
-          return render_template("login.html", password_error = password_error)
+          try:
+            user = Authe.sign_in_with_email_and_password(session['email'] , session['password'])
+            return redirect(url_for('recommend'))
+          except Exception as e:
+            password_error = "Wrong Password"
+            return render_template("login.html", password_error = password_error)          
     else:
         return redirect(url_for('Login_page'))
 # //////////////////////////////////////
@@ -104,6 +114,46 @@ def Logout():
   return redirect(url_for('Login_page'))
 # //////////////////////////////////////
 # Login and Signup Function End Here
+# //////////////////////////////////////
+# //////////////////////////////////////
+# Password Reset Function Goes Here
+# //////////////////////////////////////
+@app.route('/pass_reset')
+def Reset_page():
+  return render_template("password_reset.html")
+@app.route("/reset_now" , methods = ["GET",'POST'])
+def Reset_now():
+  if request.method == 'POST' and len(dict(request.form)) > 0:
+      userdata = dict(request.form)
+      email = userdata["email"]
+      if not email or email == "" or "@" not in email  or "." not in email: 
+        email_error = "Invalid Email"
+        return render_template("password_reset.html" , email_error = email_error)
+      else:
+        try:
+          email2 = auth.generate_password_reset_link(email)
+          my_email = "mirfaizanali78@gmail.com"
+          password = "kzevngbifznrpxlh"
+
+          connection = smtplib.SMTP("smtp.gmail.com" , 587)
+          connection.ehlo()
+          connection.starttls()
+          connection.ehlo()
+          connection.login(user=my_email, password=password)
+          Subject = 'Reset Your Password'
+          body = 'Click this link to reset your Songify Password '
+          msg = f'Subject: {Subject}\n\n{body}\n\n{email2}'
+          connection.sendmail(my_email, email, msg=msg )
+          print("email : " + email2)
+          email_success = "Check Your Inbox or spam to reset password"
+          return render_template("password_reset.html",email_success = email_success)
+        except :
+          email_error = "Provided Email is Not Registered"
+          return render_template("password_reset.html",email_error = email_error)        
+  else:
+    return redirect(url_for('Reset_page'))
+# //////////////////////////////////////
+# Password Reset Function End Here
 # //////////////////////////////////////
 # //////////////////////////////////////
 # Refresh recommendations Function Goes Here
@@ -197,26 +247,27 @@ def seperate_song_link_recommendation(songlink,song,recommendation):
 @app.route("/favourite_page")
 def Favourite_page():
   user = auth.get_user_by_email(session['email'])
-  favsongs = db.child(user.uid).child('Fav-Songs').get().val()
-  fav_songs = []
+  favsongs = db.child("users").child(user.uid).child('Fav-Songs').get().val()
+  fav_songs = set()
   if favsongs is not None:
-    favsong = db.child(user.uid).child('Fav-Songs').get()
-    for song in reversed(favsong.each()):
+    favsong = db.child("users").child(user.uid).child('Fav-Songs').get()
+    for song in favsong.each():
         songlist = song.val()
-        fav_songs.append(songlist)
-  
+        fav_songs.add(songlist)
   fav_songs_name = []
   fav_songs_link = []
   for i in fav_songs:
-    if "https" in i:
-      # k = k + 2
-      fav_songs_link.append(i)
-    elif "https" not in i:
-      # j = j + 1
+    if "https" not in i:
       fav_songs_name.append(i)
-
-  favourite = zip(fav_songs_name , fav_songs_link)
-  return render_template("favourite.html" , favourite = favourite)
+    else:
+      fav_songs_link.append(i)
+  if len(fav_songs_name) == 0 :
+    warning_fav = "No Songs To Display in Favourite List"
+    return render_template("favourite.html",warning_fav = warning_fav)
+  favourite = zip( fav_songs_name , fav_songs_link  )
+  print(fav_songs_link)
+  print(fav_songs_name)
+  return render_template("favourite.html" , favourite = favourite )
 
 @app.route("/favourite" , methods = ['GET','POST'])
 def Favourite():
@@ -225,21 +276,34 @@ def Favourite():
       songss = userdata["song"]
       songlink = userdata["songlink"]
       user = auth.get_user_by_email(session['email'])
-      db.child(user.uid).child('Fav-Songs').push(songss)
-      db.child(user.uid).child('Fav-Songs').push(songlink)
+      songs =db.child("users").child(user.uid).child('Fav-Songs').push(songss)
+      songlinks =db.child("users").child(user.uid).child('Fav-Songs').push(songlink)
       return redirect(url_for("recommend"))
     else:
-      return render_template('favourite.hmtl')
+      return redirect(url_for('recommend'))
 # //////////////////////////////////////
 # Favourite Songs Function end Here
 # //////////////////////////////////////
 # //////////////////////////////////////
 # Delete Favourite Songs Function end Here
 # //////////////////////////////////////
-@app.route('/delete_fav/<int:id>')
-def Delete(id):
-  user = auth.get_user_by_email(session['email'])
-  db.child(user.uid).child('Fav-Songs').remove()
+@app.route('/delete_fav' , methods = ["GET","POST"])
+def Delete():
+  if request.method == 'POST' and len(dict(request.form)) > 0:
+      userdata = dict(request.form)
+      songs = userdata['song']
+      songlinks = userdata['songlink']
+      user = auth.get_user_by_email(session['email'])
+      fav_song = db.child("users").child(user.uid).child('Fav-Songs').get()
+      for del_song in fav_song.each():
+        if del_song.val() == songs:
+          key = del_song.key()
+      db.child("users").child(user.uid).child("Fav-Songs").child(key).remove()
+      fav_song = db.child("users").child(user.uid).child('Fav-Songs').get()
+      for del_song in fav_song.each():
+        if del_song.val() == songlinks:
+          key = del_song.key()
+      db.child("users").child(user.uid).child("Fav-Songs").child(key).remove()
   return redirect(url_for("Favourite_page"))
 # //////////////////////////////////////
 # Delete Favourite Songs Function end Here
@@ -252,7 +316,6 @@ def recommend():
   if not session.get('email'):
     return redirect(url_for('Login_page'))
   else:
-    
     # to assign a variable to get the specifis unique user data and Print the songs for that user
     user_id1 = u[0]
     # in this line we give the argument in the form of user id means it Recommend songs for the user using personalized     model
@@ -272,4 +335,4 @@ def recommend():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)

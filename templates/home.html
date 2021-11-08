@@ -31,8 +31,11 @@
             <li class="nav-item pr-5">
               <a class="nav-link" href="/favourite_page">Favourite</a>
             </li>
-            <li class="nav-item px-5">
+            <li class="nav-item pl-5">
               <a class="btn btn-info" href="/logout">Log Out</a>
+            </li>
+            <li class="nav-item pl-1">
+              <a class="btn btn-info" href="/pass_reset">Reset Password</a>
             </li>
           </ul>
         </div>
@@ -51,10 +54,18 @@
     {% endif %}
 
     <div class="container display_recommendations">
-      <!-- <form action="/favourite" method="post"> -->
       <a href="/refresh" name="refreshbtn" class="text-decoration-none btn btn-outline-primary">Click Here! to
         Refresh</a>
-      <!-- </form> -->
+      {% if Favourite_success %}
+      <div class="alert alert-success" id="Favpurite_success" class="">
+        <p style="font-size:14px;" class="py-1">{{Favourite_success}}</p>
+      </div>
+      {% elif Favourite_exists %}
+      <div class="alert alert-success" id="Favpurite_success" class="">
+        <p style="font-size:14px;" class="py-1">{{Favourite_exists}}</p>
+      </div>
+      
+      {% endif %}
 
       {% block songs_display %}
 
@@ -68,13 +79,13 @@
           </tr>
         </thead>
         <tbody>
-          {% if songlink and song %}
+          {% if song or songlink %}
           {% for i in range(0,10) %}
           <form action="/favourite" method="post">
             <tr>
               <th scope="row"></th>
               <td class="font-weight-bold">{{i}}</td>
-              <td><input type="text" name="song" value="{{song[i]}}"  class="btn bg-white border-0 w-100"></td>
+              <td><input type="text" name="song" value="{{song[i]}}"readonly class="btn bg-white border-0 w-100"></td>
               <td><input type="text" name="songlink" value="{{songlink[i]}}" readonly hidden class="bg-white "></td>
               <td><a href="{{songlink[i]}}" target="_blank" class="text-decoration-none btn btn-outline-danger">Play
                   Song</a></td>
